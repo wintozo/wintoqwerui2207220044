@@ -1,62 +1,64 @@
-name: Build Android APK
+﻿name: Build Android APK
 
 on:
   push:
     branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
-  build:
+  build-apk:
     runs-on: ubuntu-latest
-
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: 'npm'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+    - name: Install dependencies
+      run: npm ci
 
-      - name: Gradle cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
+    - name: Build project
+      run: npm run build
 
-      - name: Build web
-        run: |
-          npm ci
-          npm run build
-        working-directory: .
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
 
-      - name: Copy web assets to Android
-        run: |
-          mkdir -p android/app/src/main/assets/public
-          cp -r dist/* android/app/src/main/assets/public/
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
 
-      - name: Make Gradle executable
-        run: chmod +x android/gradlew
-        working-directory: .
+    - name: Setup Android platform
+      run: |
+        npx @capacitor/cli@latest add android
 
-      - name: Build APK
-        run: |
-          ./gradlew assembleDebug
-        working-directory: android
+    - name: Configure Android app
+      run: |
+        sed -i 's/android:label=""[^"]*"[/]/android:label="Messenger Wintozo"/g' android/app/src/main/AndroidManifest.xml
+        sed -i 's/<application/<application\n    android:usesCleartextTraffic="true"/g' android/app/src/main/AndroidManifest.xml
+        if ! grep -q "RECORD_AUDIO" android/app/src/main/AndroidManifest.xml; then
+          sed -i '/<\/manifest>/i <uses-permission android:name="android.permission.RECORD_AUDIO" />' android/app/src/main/AndroidManifest.xml
+          sed -i '/<\/manifest>/i <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />' android/app/src/main/AndroidManifest.xml
+          sed -i '/<\/manifest>/i <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />' android/app/src/main/AndroidManifest.xml
+          sed -i '/<\/manifest>/i <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />' android/app/src/main/AndroidManifest.xml
+        fi
+        sed -i 's/applicationId "org.wintozo.app"/applicationId "org.wintozo.messenger"/g' android/app/build.gradle
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: wintozo-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
-          retention-days: 30
+    - name: Build APK
+      run: |
+        cd android
+        chmod +x gradlew
+        ./gradlew assembleDebug
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: Messenger-Wintozo-APK
+        path: android/app/build/outputs/apk/debug/app-debug.apk
+        retention-days: 30
