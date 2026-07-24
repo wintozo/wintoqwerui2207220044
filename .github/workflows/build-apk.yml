@@ -36,6 +36,7 @@ jobs:
 
     - name: Setup Android platform
       run: |
+        rm -rf android
         npx @capacitor/cli@6 add android
 
     - name: Configure Android app
