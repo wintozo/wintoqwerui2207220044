@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+android/app/build/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.local
+
+# Gradle
+android/.gradle/
+android/gradle/wrapper/gradle-wrapper.jar
+
+# Capacitor
+android/app/src/main/assets/
+
+# Logs
+*.log
+npm-debug.log*

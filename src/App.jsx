@@ -1,0 +1,39 @@
+import { Routes, Route, Navigate } from 'react-router-dom'
+import { useAuth } from './context/AuthContext.jsx'
+import Index from './pages/Index.jsx'
+import Login from './pages/Login.jsx'
+import RegistrationUsername from './pages/RegistrationUsername.jsx'
+import RegistrationPassword from './pages/RegistrationPassword.jsx'
+import RegistrationDevice from './pages/RegistrationDevice.jsx'
+import ChatRouter from './pages/ChatRouter.jsx'
+import SettingsRouter from './pages/SettingsRouter.jsx'
+import SearchRouter from './pages/SearchRouter.jsx'
+
+export default function App() {
+  const { loading } = useAuth()
+
+  if (loading) {
+    return (
+      <div className="auth-wrapper">
+        <div className="logo">Wintozo</div>
+      </div>
+    )
+  }
+
+  return (
+    <Routes>
+      <Route path="/" element={<Index />} />
+      <Route path="/messenger/login" element={<Login />} />
+      <Route path="/messenger/registration/username" element={<RegistrationUsername />} />
+      <Route path="/messenger/registration/password" element={<RegistrationPassword />} />
+      <Route path="/messenger/registration/device/select" element={<RegistrationDevice />} />
+      <Route path="/messenger/phone/chat" element={<ChatRouter />} />
+      <Route path="/messenger/computer/chat" element={<ChatRouter />} />
+      <Route path="/messenger/phone/chat/search" element={<SearchRouter />} />
+      <Route path="/messenger/computer/chat/search" element={<SearchRouter />} />
+      <Route path="/messenger/phone/settings" element={<SettingsRouter />} />
+      <Route path="/messenger/computer/settings" element={<SettingsRouter />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  )
+}
