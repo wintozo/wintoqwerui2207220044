@@ -20,7 +20,6 @@ Thumbs.db
 
 # Gradle
 android/.gradle/
-android/gradle/wrapper/gradle-wrapper.jar
 
 # Capacitor
 android/app/src/main/assets/
