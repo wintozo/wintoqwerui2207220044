@@ -71,7 +71,13 @@ export default function ComputerSearch() {
           ) : (
             results.map((user, i) => (
               <div key={user.id} style={{ ...s.userItem, animationDelay: `${i * 0.03}s` }} onClick={() => handleUserClick(user)}>
-                <div style={s.avatar}>{user.nickname?.[0]?.toUpperCase() || '?'}</div>
+                {user.avatar_url ? (
+                  <img src={user.avatar_url} alt="" style={{ width: '46px', height: '46px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                ) : user.avatar ? (
+                  <div style={{ width: '46px', height: '46px', borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>{user.avatar}</div>
+                ) : (
+                  <div style={s.avatar}>{user.nickname?.[0]?.toUpperCase() || '?'}</div>
+                )}
                 <div style={s.userInfo}>
                   <div style={s.userName}>{user.nickname}</div>
                   <div style={s.userUsername}>@{user.username}</div>

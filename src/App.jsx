@@ -8,6 +8,9 @@ import RegistrationDevice from './pages/RegistrationDevice.jsx'
 import ChatRouter from './pages/ChatRouter.jsx'
 import SettingsRouter from './pages/SettingsRouter.jsx'
 import SearchRouter from './pages/SearchRouter.jsx'
+import BattlePage from './mobile/BattlePage.jsx'
+import ProStatusPage from './mobile/ProStatusPage.jsx'
+import ProCustomizePage from './mobile/ProCustomizePage.jsx'
 
 export default function App() {
   const { loading } = useAuth()
@@ -33,6 +36,9 @@ export default function App() {
       <Route path="/messenger/computer/chat/search" element={<SearchRouter />} />
       <Route path="/messenger/phone/settings" element={<SettingsRouter />} />
       <Route path="/messenger/computer/settings" element={<SettingsRouter />} />
+      <Route path="/messenger/battle" element={<BattlePage />} />
+      <Route path="/messenger/status/pro" element={<ProStatusPage />} />
+      <Route path="/messenger/settings/pro-customize" element={<ProCustomizePage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

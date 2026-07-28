@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase.js'
 import { useAuth } from '../context/AuthContext.jsx'
-import { BackIcon, LogoutIcon } from '../components/Icons.jsx'
+import { BackIcon, LogoutIcon, ImageIcon, TrophyIcon, CrownIcon, SparkleIcon } from '../components/Icons.jsx'
+import AvatarPicker from '../components/AvatarPicker.jsx'
 
 const s = {
   layout: { display: 'flex', height: '100vh', background: 'var(--bg)', color: 'var(--text)', animation: 'fadeIn 0.3s ease' },
@@ -26,8 +28,11 @@ const s = {
 
 export default function ComputerSettings() {
   const navigate = useNavigate()
-  const { user, signOut } = useAuth()
+  const { user, signOut, setUser } = useAuth()
   const [theme, setTheme] = useState(localStorage.getItem('wintozo_theme') || 'light')
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false)
+  const [proActive, setProActive] = useState(false)
+  const [proLoading, setProLoading] = useState(true)
   const device = 'computer'
 
   useEffect(() => {
@@ -35,10 +40,43 @@ export default function ComputerSettings() {
     localStorage.setItem('wintozo_theme', theme)
   }, [theme])
 
+  useEffect(() => {
+    const username = localStorage.getItem('wintozo_username')
+    if (!username) return
+    loadProStatus(username)
+  }, [])
+
+  const loadProStatus = async (username) => {
+    try {
+      const { data } = await supabase.rpc('get_pro_status', { p_username: username })
+      setProActive(data?.active || false)
+    } catch (err) {
+      console.error('Pro status error:', err)
+    } finally {
+      setProLoading(false)
+    }
+  }
+
   function handleLogout() {
     signOut()
     localStorage.removeItem('wintozo_device')
     navigate('/messenger/registration/username')
+  }
+
+  function handleAvatarChange(avatar) {
+    if (user) {
+      setUser({ ...user, ...avatar })
+    }
+  }
+
+  const renderAvatar = (user, size = '80px') => {
+    if (user?.avatar_url) {
+      return <img src={user.avatar_url} alt="" style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover' }} />
+    }
+    if (user?.avatar) {
+      return <div style={{ width: size, height: size, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px' }}>{user.avatar}</div>
+    }
+    return <div style={{ width: size, height: size, borderRadius: '50%', background: 'var(--accent)', color: 'var(--accent-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '36px' }}>{(user?.nickname || '?')[0]?.toUpperCase()}</div>
   }
 
   const themes = [
@@ -60,6 +98,26 @@ export default function ComputerSettings() {
         <div style={s.title}>Настройки</div>
         <div style={s.section}>
           <div style={s.sectionTitle}>ПРОФИЛЬ</div>
+          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+            <div onClick={() => setShowAvatarPicker(true)} style={{ cursor: 'pointer', display: 'inline-block', position: 'relative' }}>
+              {renderAvatar(user)}
+              <div style={{
+                position: 'absolute',
+                bottom: '4px',
+                right: '4px',
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                background: 'var(--accent)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '3px solid var(--bg)'
+              }}>
+                <ImageIcon size={16} />
+              </div>
+            </div>
+          </div>
           <div style={s.profileInfo}>
             <div style={s.profileRow}>
               <div style={s.profileLabel}>Никнейм</div>
@@ -69,6 +127,12 @@ export default function ComputerSettings() {
               <div style={s.profileLabel}>Юзернейм</div>
               <div style={s.profileValue}>@{user?.username || '-'}</div>
             </div>
+            {user?.current_badge && (
+              <div style={{ ...s.profileRow, marginTop: '16px' }}>
+                <div style={s.profileLabel}>Бейдж</div>
+                <div style={{ fontSize: '28px', marginTop: '4px' }}>{user.current_badge}</div>
+              </div>
+            )}
           </div>
         </div>
         <div style={{ ...s.section, animationDelay: '0.1s' }}>
@@ -82,8 +146,44 @@ export default function ComputerSettings() {
             ))}
           </div>
         </div>
+        <div style={s.section}>
+          <div style={s.sectionTitle}>ИГРЫ</div>
+          <div style={{ padding: '16px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius)', border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} onClick={() => navigate('/messenger/battle')}>
+            <div style={{ fontWeight: 600, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <TrophyIcon size={20} /> Битва смайликов
+            </div>
+            <div style={{ fontSize: '18px', color: 'var(--text-secondary)' }}>›</div>
+          </div>
+        </div>
+        <div style={s.section}>
+          <div style={s.sectionTitle}>ПРО</div>
+          <div style={{ padding: '16px', background: proActive ? 'rgba(245,158,11,0.08)' : 'var(--bg-secondary)', borderRadius: 'var(--radius)', border: `1px solid ${proActive ? '#f59e0b' : 'var(--border)'}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} onClick={() => navigate('/messenger/status/pro')}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <CrownIcon size={20} style={{ color: '#f59e0b' }} />
+              <div>
+                <div style={{ fontWeight: 600, fontSize: '15px' }}>Wintozo Pro</div>
+                <div style={{ fontSize: '12px', color: proActive ? '#f59e0b' : 'var(--text-secondary)' }}>
+                  {proLoading ? 'Загрузка...' : proActive ? 'Активен' : 'Неактивен'}
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {proActive && <SparkleIcon size={18} style={{ color: '#f59e0b' }} />}
+              <div style={{ fontSize: '18px', color: 'var(--text-secondary)' }}>›</div>
+            </div>
+          </div>
+          {proActive && (
+            <div style={{ padding: '16px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius)', border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} onClick={() => navigate('/messenger/settings/pro-customize')}>
+              <div style={{ fontWeight: 600, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <SparkleIcon size={18} style={{ color: '#f59e0b' }} /> Использовать возможности Wintozo-Pro
+              </div>
+              <div style={{ fontSize: '18px', color: 'var(--text-secondary)' }}>›</div>
+            </div>
+          )}
+        </div>
         <div style={{ ...s.logout, animation: 'slideUp 0.4s ease 0.15s backwards' }} onClick={handleLogout}><LogoutIcon size={18} /> Выйти из аккаунта</div>
       </div>
+      {showAvatarPicker && <AvatarPicker currentAvatar={user?.avatar ? { type: 'emoji', value: user.avatar } : user?.avatar_url ? { type: 'url', value: user.avatar_url } : null} onSelect={handleAvatarChange} onClose={() => setShowAvatarPicker(false)} />}
     </div>
   )
 }

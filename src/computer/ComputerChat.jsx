@@ -5,6 +5,8 @@ import { useChat } from '../hooks/useChat.js'
 import { useVoiceRecorder } from '../hooks/useVoiceRecorder.js'
 import { MediaMessage } from '../components/MediaMessage.jsx'
 import { SearchIcon, SettingsIcon, LogoutIcon, CloseIcon, SendIcon, SunIcon, MoonIcon, SparkIcon, MicIcon, PaperclipIcon } from '../components/Icons.jsx'
+import AdminTerminal from './AdminTerminal.jsx'
+import { supabase } from '../lib/supabase.js'
 
 const s = {
   layout: { display: 'flex', height: '100vh', background: 'var(--bg)', color: 'var(--text)', animation: 'fadeIn 0.3s ease' },
@@ -59,6 +61,34 @@ export default function ComputerChat() {
   const msgEndRef = useRef(null)
   const fileInputRef = useRef(null)
   const [theme, setTheme] = useState(localStorage.getItem('wintozo_theme') || 'light')
+  const [showTerminal, setShowTerminal] = useState(false)
+  const isAdmin = user?.username === 'admin' || user?.is_admin
+  
+  // Pro-настройки сообщений
+  const [proSettings, setProSettings] = useState({ message_color: '', message_font: '', battle_multiplier: 1.0 })
+
+  useEffect(() => {
+    loadProSettings()
+  }, [])
+
+  const loadProSettings = async () => {
+    try {
+      const { data } = await supabase
+        .from('wintozo_users')
+        .select('message_color, message_font, battle_multiplier')
+        .eq('username', user?.username)
+        .single()
+      if (data) {
+        setProSettings({
+          message_color: data.message_color || '',
+          message_font: data.message_font || '',
+          battle_multiplier: data.battle_multiplier || 1.0
+        })
+      }
+    } catch (err) {
+      console.error('Load Pro settings error:', err)
+    }
+  }
 
   const voice = useVoiceRecorder(async (data) => {
     await sendMediaMessage(data)
@@ -113,6 +143,23 @@ export default function ComputerChat() {
 
   const fmtTime = (t) => `${Math.floor(t / 60)}:${(t % 60).toString().padStart(2, '0')}`
 
+  const renderAvatar = (u, size = '46px') => {
+    if (u?.avatar_url) {
+      return <img src={u.avatar_url} alt="" style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+    }
+    if (u?.avatar) {
+      return <div style={{ width: size, height: size, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: size === '46px' ? '18px' : '36px', flexShrink: 0 }}>{u.avatar}</div>
+    }
+    return <div style={s.avatar}>{(u?.nickname || '?')[0]?.toUpperCase()}</div>
+  }
+
+  const renderBadge = (u, size = '16px') => {
+    if (u?.current_badge) {
+      return <span style={{ fontSize: size, marginLeft: '4px' }}>{u.current_badge}</span>
+    }
+    return null
+  }
+
   return (
     <div style={s.layout}>
       <div style={s.sidebar}>
@@ -132,7 +179,7 @@ export default function ComputerChat() {
           ) : (
             chats.map((chat) => (
               <div key={chat.chatId} style={{ ...s.chatItem, ...(activeChat === chat.chatId ? s.chatItemActive : {}) }} onClick={() => openChat(chat.chatId, chat.partner)}>
-                <div style={s.avatar}>{chat.partner?.nickname?.[0]?.toUpperCase() || '?'}</div>
+                {renderAvatar(chat.partner)}
                 <div style={s.chatInfo}>
                   <div style={s.chatName}>{chat.partner?.nickname || 'Неизвестно'}</div>
                   <div style={s.chatLastMsg}>{chat.lastMessage || 'Нет сообщений'}</div>
@@ -144,6 +191,14 @@ export default function ComputerChat() {
       </div>
       <div style={s.chatArea}>
         <div style={s.topBar}>
+          {isAdmin && (
+            <div style={{ ...s.iconBtn, background: 'rgba(34,197,94,0.15)', borderColor: '#22c55e' }} onClick={() => setShowTerminal(true)} title="Admin Terminal">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="4 17 10 11 4 5" />
+                <line x1="12" y1="19" x2="20" y2="19" />
+              </svg>
+            </div>
+          )}
           <div style={s.iconBtn} onClick={cycleTheme}>
             {theme === 'light' ? <MoonIcon size={18} /> : theme === 'dark' ? <SparkIcon size={18} /> : theme === 'midnight' ? <SunIcon size={18} /> : <SparkIcon size={18} />}
           </div>
@@ -156,7 +211,7 @@ export default function ComputerChat() {
         ) : (
           <>
             <div style={s.chatHeader}>
-              <div style={s.avatar}>{activeChatUser?.nickname?.[0]?.toUpperCase() || '?'}</div>
+              {renderAvatar(activeChatUser)}
               <div>
                 <div style={s.chatTitle}>{activeChatUser?.nickname || 'Чат'}</div>
                 <div style={s.chatUsername}>@{activeChatUser?.username || ''}</div>
@@ -184,7 +239,16 @@ export default function ComputerChat() {
                 }
                 return (
                   <div key={msg.id} style={{ ...s.msgRow, ...(isSelf ? s.msgSelf : s.msgOther) }}>
-                    <div style={{ ...s.msgBubble, ...(isSelf ? s.msgSelfBubble : s.msgOtherBubble) }}>{msg.content}</div>
+                    <div 
+                      style={{ 
+                        ...s.msgBubble, 
+                        ...(isSelf ? s.msgSelfBubble : s.msgOtherBubble),
+                        ...(isSelf && proSettings.message_color ? { background: proSettings.message_color } : {}),
+                        ...(proSettings.message_font ? { fontFamily: proSettings.message_font } : {})
+                      }}
+                    >
+                      {msg.content}
+                    </div>
                   </div>
                 )
               })}
@@ -194,7 +258,7 @@ export default function ComputerChat() {
               <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageSend} />
               <button
                 style={{ ...s.iconBtn, width: '42px', height: '42px', padding: '0' }}
-                onClick={handleImagePick}
+                onClick={() => fileInputRef.current?.click()}
                 title="Прикрепить фото"
               >
                 <PaperclipIcon size={20} />
@@ -237,6 +301,8 @@ export default function ComputerChat() {
       {(voice.uploading || sendingImage) && (
         <div style={s.uploadBar}>{sendingImage ? 'Отправка фото...' : 'Отправка голосового...'}</div>
       )}
+
+      {showTerminal && <AdminTerminal onClose={() => setShowTerminal(false)} />}
     </div>
   )
 }

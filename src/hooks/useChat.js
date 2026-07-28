@@ -167,6 +167,13 @@ export function useChat() {
           return [...prev, data]
         })
         loadChats()
+        // Начислить очки за текстовое сообщение
+        try {
+          await supabase.rpc('add_message_points', {
+            p_username: user.username,
+            p_message_type: 'text'
+          })
+        } catch (e) { /* battle tables may not exist yet */ }
         return data
       }
     } catch (err) {
@@ -189,6 +196,13 @@ export function useChat() {
       if (data) {
         setMessages((prev) => [...prev, data])
         loadChats()
+        // Начислить очки за голосовое
+        try {
+          await supabase.rpc('add_message_points', {
+            p_username: user.username,
+            p_message_type: 'voice'
+          })
+        } catch (e) { /* battle tables may not exist yet */ }
         return data
       }
     } catch (err) {
@@ -231,6 +245,13 @@ export function useChat() {
           return [...prev, data]
         })
         loadChats()
+        // Начислить очки за фото
+        try {
+          await supabase.rpc('add_message_points', {
+            p_username: user.username,
+            p_message_type: 'image'
+          })
+        } catch (e) { /* battle tables may not exist yet */ }
         return data
       }
     } catch (err) {

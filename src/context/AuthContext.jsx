@@ -126,7 +126,8 @@ export function AuthProvider({ children }) {
     setRegData,
     signUp,
     signIn,
-    signOut
+    signOut,
+    setUser
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

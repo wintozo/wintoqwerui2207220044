@@ -5,6 +5,7 @@ import { useChat } from '../hooks/useChat.js'
 import { useVoiceRecorder } from '../hooks/useVoiceRecorder.js'
 import { MediaMessage } from '../components/MediaMessage.jsx'
 import { SearchIcon, SettingsIcon, LogoutIcon, CloseIcon, BackIcon, SendIcon, SunIcon, MoonIcon, SparkIcon, MicIcon, PaperclipIcon } from '../components/Icons.jsx'
+import { supabase } from '../lib/supabase.js'
 
 const s = {
   layout: { display: 'flex', height: '100dvh', background: 'var(--bg)', color: 'var(--text)', animation: 'fadeIn 0.3s ease', flexDirection: 'column' },
@@ -31,7 +32,7 @@ const s = {
   msgSelfBubble: { background: 'var(--accent)', color: 'var(--accent-text)', borderBottomRightRadius: '4px', boxShadow: 'var(--shadow-accent)' },
   msgOtherBubble: { background: 'var(--bg-tertiary)', color: 'var(--text)', borderBottomLeftRadius: '4px' },
   inputBar: { display: 'flex', padding: '12px 16px', borderTop: '1px solid var(--border)', background: 'var(--bg-secondary)', gap: '10px', flexShrink: 0, alignItems: 'center' },
-  input: { flex: 1, padding: '12px 18px', background: 'var(--bg-tertiary)', borderRadius: '24px', border: '1px solid var(--border)', color: 'var(--text)', fontSize: '14px', transition: 'border-color var(--transition)' },
+  input: { flex: 1, minWidth: 0, padding: '12px 18px', background: 'var(--bg-tertiary)', borderRadius: '24px', border: '1px solid var(--border)', color: 'var(--text)', fontSize: '14px', transition: 'border-color var(--transition)' },
   sendBtn: { padding: '12px 20px', borderRadius: '24px', background: 'var(--accent)', color: 'var(--accent-text)', fontWeight: 700, cursor: 'pointer', border: 'none', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px', transition: 'transform var(--transition)', boxShadow: 'var(--shadow-accent)', flexShrink: 0 },
   topBar: { padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px', borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)', flexShrink: 0 },
   iconBtn: { padding: '8px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', color: 'var(--text-secondary)', background: 'var(--bg-tertiary)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all var(--transition)' },
@@ -43,7 +44,8 @@ const s = {
   recWave: { display: 'flex', alignItems: 'center', gap: '2px', height: '20px' },
   recWaveBar: { width: '3px', background: '#ef4444', borderRadius: '2px', transition: 'height 0.05s ease' },
   recHint: { fontSize: '12px', color: 'var(--text-secondary)' },
-  uploadBar: { position: 'fixed', bottom: '90px', left: '50%', transform: 'translateX(-50%)', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '24px', padding: '10px 20px', fontSize: '14px', color: 'var(--text-secondary)', boxShadow: 'var(--shadow-lg)', zIndex: 100 }
+  uploadBar: { position: 'fixed', bottom: '90px', left: '50%', transform: 'translateX(-50%)', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '24px', padding: '10px 20px', fontSize: '14px', color: 'var(--text-secondary)', boxShadow: 'var(--shadow-lg)', zIndex: 100 },
+  avatarImg: { width: '46px', height: '46px', borderRadius: '50%', objectFit: 'cover' }
 }
 
 export default function MobileChat() {
@@ -55,6 +57,32 @@ export default function MobileChat() {
   const fileInputRef = useRef(null)
   const msgEndRef = useRef(null)
   const [theme, setTheme] = useState(localStorage.getItem('wintozo_theme') || 'light')
+  
+  // Pro-настройки сообщений
+  const [proSettings, setProSettings] = useState({ message_color: '', message_font: '', battle_multiplier: 1.0 })
+
+  useEffect(() => {
+    loadProSettings()
+  }, [])
+
+  const loadProSettings = async () => {
+    try {
+      const { data } = await supabase
+        .from('wintozo_users')
+        .select('message_color, message_font, battle_multiplier')
+        .eq('username', user?.username)
+        .single()
+      if (data) {
+        setProSettings({
+          message_color: data.message_color || '',
+          message_font: data.message_font || '',
+          battle_multiplier: data.battle_multiplier || 1.0
+        })
+      }
+    } catch (err) {
+      console.error('Load Pro settings error:', err)
+    }
+  }
 
   const voice = useVoiceRecorder(async (data) => {
     await sendMediaMessage(data)
@@ -109,6 +137,23 @@ export default function MobileChat() {
 
   const fmtTime = (t) => `${Math.floor(t / 60)}:${(t % 60).toString().padStart(2, '0')}`
 
+  const renderAvatar = (u, size = '46px') => {
+    if (u?.avatar_url) {
+      return <img src={u.avatar_url} alt="" style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+    }
+    if (u?.avatar) {
+      return <div style={{ width: size, height: size, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: size === '46px' ? '18px' : '36px', flexShrink: 0 }}>{u.avatar}</div>
+    }
+    return <div style={s.avatar}>{(u?.nickname || '?')[0]?.toUpperCase()}</div>
+  }
+
+  const renderBadge = (u, size = '16px') => {
+    if (u?.current_badge) {
+      return <span style={{ fontSize: size, marginLeft: '4px' }}>{u.current_badge}</span>
+    }
+    return null
+  }
+
   return (
     <div style={s.layout}>
       {!activeChat ? (
@@ -128,7 +173,7 @@ export default function MobileChat() {
             ) : (
               chats.map((chat) => (
                 <div key={chat.chatId} style={{ ...s.chatItem, ...(activeChat === chat.chatId ? s.chatItemActive : {}) }} onClick={() => openChat(chat.chatId, chat.partner)}>
-                  <div style={s.avatar}>{chat.partner?.nickname?.[0]?.toUpperCase() || '?'}</div>
+                  {renderAvatar(chat.partner)}
                   <div style={s.chatInfo}>
                     <div style={s.chatName}>{chat.partner?.nickname || 'Неизвестно'}</div>
                     <div style={s.chatLastMsg}>{chat.lastMessage || 'Нет сообщений'}</div>
@@ -149,9 +194,12 @@ export default function MobileChat() {
             </div>
             <div style={s.chatHeader}>
               <div style={s.iconBtn} onClick={closeChat}><BackIcon size={18} /></div>
-              <div style={s.avatar}>{activeChatUser?.nickname?.[0]?.toUpperCase() || '?'}</div>
+              {renderAvatar(activeChatUser)}
               <div>
-                <div style={s.chatTitle}>{activeChatUser?.nickname || 'Чат'}</div>
+                <div style={s.chatTitle}>
+                  {activeChatUser?.nickname || 'Чат'}
+                  {renderBadge(activeChatUser)}
+                </div>
                 <div style={s.chatUsername}>@{activeChatUser?.username || ''}</div>
               </div>
             </div>
@@ -176,7 +224,16 @@ export default function MobileChat() {
             }
             return (
               <div key={msg.id} style={{ ...s.msgRow, ...(isSelf ? s.msgSelf : s.msgOther) }}>
-                <div style={{ ...s.msgBubble, ...(isSelf ? s.msgSelfBubble : s.msgOtherBubble) }}>{msg.content}</div>
+                <div 
+                  style={{ 
+                    ...s.msgBubble, 
+                    ...(isSelf ? s.msgSelfBubble : s.msgOtherBubble),
+                    ...(isSelf && proSettings.message_color ? { background: proSettings.message_color } : {}),
+                    ...(proSettings.message_font ? { fontFamily: proSettings.message_font } : {})
+                  }}
+                >
+                  {msg.content}
+                </div>
               </div>
             )
           })}
@@ -203,7 +260,7 @@ export default function MobileChat() {
                 <MicIcon size={20} />
               </button>
               <input style={s.input} placeholder="Сообщение..." value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSend()} />
-              <button style={s.sendBtn} onClick={handleSend}><SendIcon size={16} /> Отпр.</button>
+              <button style={s.sendBtn} onClick={handleSend} aria-label="Отправить"><SendIcon size={16} /></button>
             </div>
           </div>
 
