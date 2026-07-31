@@ -12,6 +12,17 @@ export default function RegistrationDevice() {
   async function handleSelect(device) {
     setError('')
     setLoading(true)
+    
+    // Если пользователь уже зарегистрирован — просто меняем устройство
+    const savedUsername = localStorage.getItem('wintozo_username')
+    if (savedUsername) {
+      localStorage.setItem('wintozo_device', device)
+      navigate(`/messenger/${device}/chat`, { replace: true })
+      setLoading(false)
+      return
+    }
+    
+    // Новая регистрация
     const { error: signUpError } = await signUp(regData.nickname, regData.username, regData.password)
     if (signUpError) {
       setError(signUpError.message || 'Ошибка регистрации')

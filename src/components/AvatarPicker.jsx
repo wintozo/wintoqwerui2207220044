@@ -2,6 +2,43 @@ import { useState, useRef } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { CloseIcon } from './Icons.jsx'
 
+/**
+ * Конвертирует изображение в WebP (самый лёгкий формат).
+ */
+function convertImageToWebP(file, quality = 0.85) {
+  return new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        canvas.width = img.width
+        canvas.height = img.height
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0)
+        
+        canvas.toBlob(
+          (blob) => {
+            if (blob && blob.type === 'image/webp') {
+              resolve(blob)
+            } else {
+              canvas.toBlob(
+                (jpegBlob) => resolve(jpegBlob || file),
+                'image/jpeg',
+                quality
+              )
+            }
+          },
+          'image/webp',
+          quality
+        )
+      }
+      img.src = e.target.result
+    }
+    reader.readAsDataURL(file)
+  })
+}
+
 const PRESET_COLORS = [
   '#3b82f6', // синий
   '#8b5cf6', // фиолетовый
@@ -162,12 +199,18 @@ export default function AvatarPicker({ currentAvatar, onSelect, onClose }) {
     setUploading(true)
     try {
       const username = localStorage.getItem('wintozo_username')
-      const ext = file.name.split('.').pop().toLowerCase() || 'png'
-      const fileName = `${username}_${Date.now()}.${ext}`
+      
+      // Конвертируем фото в WebP (самый лёгкий формат)
+      let uploadFile = file
+      if (file.type && file.type.startsWith('image/')) {
+        uploadFile = await convertImageToWebP(file)
+      }
+      
+      const fileName = `${username}_${Date.now()}.webp`
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file, { upsert: true })
+        .upload(fileName, uploadFile, { upsert: true, contentType: 'image/webp' })
 
       if (uploadError) throw uploadError
 

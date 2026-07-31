@@ -10,7 +10,7 @@ const s = {
   headerTitle: { color: '#fff', fontWeight: 'bold', fontSize: '14px' },
   closeBtn: { padding: '8px', borderRadius: '8px', cursor: 'pointer', color: '#9ca3af', background: 'transparent', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' },
   closeBtnHover: { background: '#374151' },
-  output: { flex: 1, overflowY: 'auto', padding: '16px', fontFamily: 'monospace', fontSize: '14px' },
+  output: { flex: 1, overflowY: 'auto', padding: '16px', fontFamily: 'monospace', fontSize: '14px', whiteSpace: 'pre-line' },
   inputBar: { padding: '12px 16px', borderTop: '1px solid #374151', background: '#1f2937', display: 'flex', alignItems: 'center', gap: '8px' },
   prompt: { color: '#4ade80', fontFamily: 'monospace', fontWeight: 'bold', fontSize: '14px', flexShrink: 0 },
   input: { flex: 1, background: 'transparent', color: '#fff', fontFamily: 'monospace', fontSize: '14px', border: 'none', outline: 'none', placeholderColor: '#4b5563' },
@@ -52,7 +52,7 @@ export default function AdminTerminal({ onClose }) {
   const getUserById = async (id) => {
     const { data } = await supabase
       .from("wintozo_users")
-      .select("username, avatar, banned, title")
+      .select("username, avatar, banned, is_admin, avatar_url, description, created_at")
       .eq("username", id)
       .single();
     return data;
@@ -61,7 +61,7 @@ export default function AdminTerminal({ onClose }) {
   const getAllUsers = async () => {
     const { data } = await supabase
       .from("wintozo_users")
-      .select("username, avatar, banned, title, is_admin, avatar_url, description, created_at")
+      .select("username, avatar, banned, is_admin, avatar_url, description, created_at")
       .order("created_at", { ascending: false });
     return data || [];
   };
@@ -81,6 +81,10 @@ export default function AdminTerminal({ onClose }) {
   /remove w-pro (ник)     — Забрать Wintozo Pro
   /tittle give (ник) X    — Выдать титул (owner, tester, Spidi)
   /tittle remove (ник) X  — Забрать титул
+  /set balls battle (ник) X — Добавить X очков в битву
+  /delete balls battle (ник) X — Удалить X очков из битвы
+  /battle start           — Начать новую битву
+  /battle stop            — Остановить текущую битву
   /users                  — Показать всех пользователей
   /clear                  — Очистить терминал`;
       }
@@ -291,9 +295,94 @@ export default function AdminTerminal({ onClose }) {
       }
     },
 
+    "set": {
+      name: "set",
+      execute: async (args) => {
+        if (args[0] !== "balls" || args[1] !== "battle") {
+          return "❌ Используйте: /set balls battle (ник) X";
+        }
+
+        const nick = args[2];
+        const amount = parseInt(args[3]);
+
+        if (!nick) return "❌ Ошибка: укажите ник. Пример: /set balls battle Admin 100";
+        if (isNaN(amount)) return "❌ Ошибка: укажите число. Пример: /set balls battle Admin 100";
+
+        const user = await getUserById(nick);
+        if (!user) return `❌ Пользователь ${nick} не найден`;
+
+        const weekStart = await supabase.rpc("get_week_start");
+        const week = weekStart.data;
+
+        const { data: existing } = await supabase
+          .from("wintozo_battle_scores")
+          .select("total_score")
+          .eq("username", nick)
+          .eq("week_start", week)
+          .single();
+
+        const currentScore = existing?.total_score || 0;
+        const newScore = currentScore + amount;
+
+        if (existing) {
+          await supabase
+            .from("wintozo_battle_scores")
+            .update({ total_score: newScore })
+            .eq("username", nick)
+            .eq("week_start", week);
+        } else {
+          await supabase
+            .from("wintozo_battle_scores")
+            .insert({
+              username: nick,
+              week_start: week,
+              total_score: amount
+            });
+        }
+
+        return `✅ Пользователю ${nick} добавлено ${amount} очков. Общий счёт: ${newScore}`;
+      }
+    },
+
     "delete": {
       name: "delete",
       execute: async (args) => {
+        // Проверяем, это balls battle или удаление пользователя
+        if (args[0] === "balls" && args[1] === "battle") {
+          const nick = args[2];
+          const amount = parseInt(args[3]);
+
+          if (!nick) return "❌ Ошибка: укажите ник. Пример: /delete balls battle Admin 100";
+          if (isNaN(amount)) return "❌ Ошибка: укажите число. Пример: /delete balls battle Admin 100";
+
+          const user = await getUserById(nick);
+          if (!user) return `❌ Пользователь ${nick} не найден`;
+
+          const weekStart = await supabase.rpc("get_week_start");
+          const week = weekStart.data;
+
+          const { data: existing } = await supabase
+            .from("wintozo_battle_scores")
+            .select("total_score")
+            .eq("username", nick)
+            .eq("week_start", week)
+            .single();
+
+          const currentScore = existing?.total_score || 0;
+          const newScore = Math.max(0, currentScore - amount);
+
+          if (existing) {
+            await supabase
+              .from("wintozo_battle_scores")
+              .update({ total_score: newScore })
+              .eq("username", nick)
+              .eq("week_start", week);
+          }
+
+          return `✅ У пользователя ${nick} удалено ${amount} очков. Остаток: ${newScore}`;
+        }
+
+        // Обычное удаление пользователя
         const id = args[0];
         if (!id) return "❌ Ошибка: укажите ID пользователя. Пример: /delete Admin";
 
@@ -309,6 +398,35 @@ export default function AdminTerminal({ onClose }) {
         if (error) return `❌ Ошибка: ${error.message}`;
 
         return `🗑 Пользователь ${id} удалён навсегда`;
+      }
+    },
+
+    "battle": {
+      name: "battle",
+      execute: async (args) => {
+        if (args[0] === "start") {
+          // Завершаем текущую неделю и начинаем новую
+          const { data: settleResult } = await supabase.rpc("settle_battle_week");
+          
+          if (settleResult?.settled) {
+            return `🏆 Битва завершена! Победитель: ${settleResult.winner}\nНовая битва началась!`;
+          }
+          
+          return `ℹ️ Битва уже активна. Новая неделя начата.`;
+        }
+
+        if (args[0] === "stop") {
+          // Подводим итоги текущей недели
+          const { data: settleResult } = await supabase.rpc("settle_battle_current");
+          
+          if (settleResult?.settled) {
+            return `🏆 Битва завершена! Победитель: ${settleResult.winner}\nУчастники победившей команды получили Wintozo Pro на 3 дня`;
+          }
+          
+          return `ℹ️ Нет результатов для подведения. Убедитесь что участники имеют очки в битве.`;
+        }
+
+        return "❌ Используйте: /battle start или /battle stop";
       }
     },
 
@@ -332,8 +450,8 @@ export default function AdminTerminal({ onClose }) {
           const status = u.banned ? "🚫" : "✅";
           const admin = u.is_admin ? "👑" : "";
           const pro = proMap[u.username] ? "👑" : "";
-          const title = u.title ? ` [${u.title}]` : "";
-          return `${status} ${admin}${u.username}${title} ${pro}`;
+          const badge = u.current_badge ? ` [${u.current_badge}]` : "";
+          return `${status} ${admin}${u.username}${badge} ${pro}`;
         });
 
         return `Всего пользователей: ${users.length}\n${lines.join("\n")}`;

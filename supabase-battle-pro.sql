@@ -67,6 +67,10 @@ ALTER TABLE wintozo_users ADD COLUMN IF NOT EXISTS battle_multiplier DECIMAL(3,1
 ALTER TABLE wintozo_users ADD COLUMN IF NOT EXISTS admin_contacts_remaining INTEGER DEFAULT 2;
 ALTER TABLE wintozo_users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT false;
 
+-- 7a. Добавляем колонки в messages для отображения Pro-стилей
+ALTER TABLE messages ADD COLUMN IF NOT EXISTS message_color TEXT DEFAULT '';
+ALTER TABLE messages ADD COLUMN IF NOT EXISTS message_font TEXT DEFAULT '';
+
 -- 7b. Бейджи победителей
 CREATE TABLE IF NOT EXISTS wintozo_badges (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -99,6 +103,8 @@ DROP POLICY IF EXISTS "battle_scores_write" ON wintozo_battle_scores;
 DROP POLICY IF EXISTS "battle_history_read" ON wintozo_battle_history;
 DROP POLICY IF EXISTS "pro_read" ON wintozo_pro;
 DROP POLICY IF EXISTS "pro_write" ON wintozo_pro;
+DROP POLICY IF EXISTS "badges_read" ON wintozo_badges;
+DROP POLICY IF EXISTS "badges_write" ON wintozo_badges;
 
 CREATE POLICY "battle_teams_read"  ON wintozo_battle_teams  FOR SELECT USING (true);
 CREATE POLICY "battle_teams_write" ON wintozo_battle_teams  FOR INSERT WITH CHECK (true);
@@ -128,16 +134,22 @@ CREATE OR REPLACE FUNCTION add_message_points(
 ) RETURNS void AS $$
 DECLARE
   v_week DATE;
-  v_mult INTEGER := 1;
+  v_mult DECIMAL(3,1) := 1.0;
   v_team TEXT;
   v_points INTEGER;
   v_pro_end TIMESTAMPTZ;
+  v_battle_mult DECIMAL(3,1);
 BEGIN
   v_week := get_week_start();
 
+  -- Используем battle_multiplier из wintozo_users
+  SELECT COALESCE(battle_multiplier, 1.0) INTO v_battle_mult FROM wintozo_users WHERE username = p_username;
+  v_mult := v_battle_mult;
+
+  -- Pro даёт дополнительный множитель ×2 (поверх battle_multiplier)
   SELECT end_date INTO v_pro_end FROM wintozo_pro WHERE username = p_username;
   IF v_pro_end IS NOT NULL AND v_pro_end > NOW() THEN
-    v_mult := 2;
+    v_mult := v_mult * 2;
   END IF;
 
   IF p_message_type = 'text' THEN
@@ -160,15 +172,15 @@ BEGIN
     CASE WHEN p_message_type = 'text' THEN v_points ELSE 0 END,
     CASE WHEN p_message_type = 'voice' THEN v_points ELSE 0 END,
     CASE WHEN p_message_type = 'image' THEN v_points ELSE 0 END,
-    v_points * v_mult,
-    v_mult
+    (v_points * v_mult)::INTEGER,
+    v_mult::INTEGER
   )
   ON CONFLICT (username, week_start) DO UPDATE SET
     text_score = wintozo_battle_scores.text_score + CASE WHEN p_message_type = 'text' THEN v_points ELSE 0 END,
     voice_score = wintozo_battle_scores.voice_score + CASE WHEN p_message_type = 'voice' THEN v_points ELSE 0 END,
     image_score = wintozo_battle_scores.image_score + CASE WHEN p_message_type = 'image' THEN v_points ELSE 0 END,
-    total_score = wintozo_battle_scores.total_score + v_points * v_mult,
-    multiplier = v_mult;
+    total_score = wintozo_battle_scores.total_score + (v_points * v_mult)::INTEGER,
+    multiplier = v_mult::INTEGER;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -285,6 +297,58 @@ BEGIN
   WHERE bu.team_emoji = p_emoji
   ORDER BY COALESCE(bs.total_score, 0) DESC
   LIMIT 50;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Подвести итоги текущей недели (для админа)
+CREATE OR REPLACE FUNCTION settle_battle_current() RETURNS jsonb AS $$
+DECLARE
+  v_week DATE := get_week_start();
+  v_end DATE := v_week + INTERVAL '6 days';
+  v_winner TEXT;
+BEGIN
+  SELECT emoji INTO v_winner FROM (
+    SELECT bu.team_emoji AS emoji, COALESCE(SUM(bs.total_score), 0) AS total
+    FROM wintozo_battle_users bu
+    LEFT JOIN wintozo_battle_scores bs ON bs.username = bu.username AND bs.week_start = v_week
+    GROUP BY bu.team_emoji
+    HAVING SUM(bs.total_score) > 0
+    ORDER BY total DESC
+    LIMIT 1
+  ) sub;
+
+  IF v_winner IS NULL THEN
+    RETURN jsonb_build_object('settled', false, 'reason', 'no_scores');
+  END IF;
+
+  INSERT INTO wintozo_battle_history (week_start, week_end, winning_emoji)
+  VALUES (v_week, v_end, v_winner);
+
+  INSERT INTO wintozo_pro (username, end_date, reason)
+  SELECT bu.username, NOW() + INTERVAL '3 days', 'battle'
+  FROM wintozo_battle_users bu
+  WHERE bu.team_emoji = v_winner
+  ON CONFLICT (username) DO UPDATE SET
+    end_date = GREATEST(COALESCE(wintozo_pro.end_date, '1970-01-01'::TIMESTAMPTZ), NOW() + INTERVAL '3 days'),
+    reason = 'battle';
+
+  -- Выдаём бейдж победителя всем участникам команды
+  INSERT INTO wintozo_badges (username, badge_emoji, badge_name)
+  SELECT bu.username, v_winner, 'Победитель: ' || v_winner
+  FROM wintozo_battle_users bu
+  WHERE bu.team_emoji = v_winner
+  ON CONFLICT (username, badge_emoji) DO UPDATE SET
+    won_at = NOW();
+
+  -- Устанавливаем текущий бейдж победителя
+  UPDATE wintozo_users u
+  SET current_badge = v_winner
+  FROM wintozo_battle_users bu
+  WHERE u.username = bu.username AND bu.team_emoji = v_winner;
+
+  DELETE FROM wintozo_battle_scores WHERE week_start = v_week;
+
+  RETURN jsonb_build_object('settled', true, 'winner', v_winner);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 

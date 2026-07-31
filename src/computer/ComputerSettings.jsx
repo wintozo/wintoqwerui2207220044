@@ -63,9 +63,17 @@ export default function ComputerSettings() {
     navigate('/messenger/registration/username')
   }
 
-  function handleAvatarChange(avatar) {
+function handleAvatarChange(avatar) {
     if (user) {
-      setUser({ ...user, ...avatar })
+      if (avatar === null) {
+        setUser({ ...user, avatar: '', avatar_url: '' })
+      } else if (avatar.type === 'emoji') {
+        setUser({ ...user, avatar: avatar.value, avatar_url: '' })
+      } else if (avatar.type === 'url') {
+        setUser({ ...user, avatar: '', avatar_url: avatar.value })
+      } else if (avatar.type === 'color') {
+        setUser({ ...user, avatar: '', avatar_url: avatar.value })
+      }
     }
   }
 
@@ -180,6 +188,15 @@ export default function ComputerSettings() {
               <div style={{ fontSize: '18px', color: 'var(--text-secondary)' }}>›</div>
             </div>
           )}
+        </div>
+        <div style={s.section}>
+          <div style={s.sectionTitle}>СИСТЕМА</div>
+          <div style={{ padding: '16px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius)', border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} onClick={() => navigate('/messenger/registration/device/select')}>
+          <div style={{ fontWeight: 600, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              Сменить устройство
+            </div>
+            <div style={{ fontSize: '18px', color: 'var(--text-secondary)' }}>›</div>
+          </div>
         </div>
         <div style={{ ...s.logout, animation: 'slideUp 0.4s ease 0.15s backwards' }} onClick={handleLogout}><LogoutIcon size={18} /> Выйти из аккаунта</div>
       </div>

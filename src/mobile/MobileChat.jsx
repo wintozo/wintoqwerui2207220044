@@ -8,9 +8,9 @@ import { SearchIcon, SettingsIcon, LogoutIcon, CloseIcon, BackIcon, SendIcon, Su
 import { supabase } from '../lib/supabase.js'
 
 const s = {
-  layout: { display: 'flex', height: '100dvh', background: 'var(--bg)', color: 'var(--text)', animation: 'fadeIn 0.3s ease', flexDirection: 'column' },
+  layout: { display: 'flex', height: '100dvh', background: 'var(--bg)', color: 'var(--text)', animation: 'fadeIn 0.5s ease', flexDirection: 'column' },
   chatList: { flex: 1, overflowY: 'auto' },
-  chatItem: { display: 'flex', alignItems: 'center', padding: '14px 16px', gap: '12px', cursor: 'pointer', transition: 'background var(--transition)' },
+  chatItem: { display: 'flex', alignItems: 'center', padding: '14px 16px', gap: '12px', cursor: 'pointer', transition: 'background var(--transition)', animation: 'slideUp 0.4s ease backwards' },
   chatItemActive: { background: 'var(--accent-soft)' },
   avatar: { width: '46px', height: '46px', borderRadius: '50%', background: 'var(--accent)', color: 'var(--accent-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '18px', flexShrink: 0, boxShadow: 'var(--shadow-accent)' },
   chatInfo: { flex: 1, minWidth: 0 },
@@ -28,12 +28,12 @@ const s = {
   msgRow: { display: 'flex' },
   msgSelf: { justifyContent: 'flex-end' },
   msgOther: { justifyContent: 'flex-start' },
-  msgBubble: { maxWidth: '75%', padding: '10px 16px', borderRadius: '18px', fontSize: '14px', lineHeight: 1.4, wordBreak: 'break-word', animation: 'msgIn 0.3s ease' },
+  msgBubble: { maxWidth: '75%', padding: '10px 16px', borderRadius: '18px', fontSize: '14px', lineHeight: 1.4, wordBreak: 'break-word', animation: 'msgIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) backwards' },
   msgSelfBubble: { background: 'var(--accent)', color: 'var(--accent-text)', borderBottomRightRadius: '4px', boxShadow: 'var(--shadow-accent)' },
   msgOtherBubble: { background: 'var(--bg-tertiary)', color: 'var(--text)', borderBottomLeftRadius: '4px' },
   inputBar: { display: 'flex', padding: '12px 16px', borderTop: '1px solid var(--border)', background: 'var(--bg-secondary)', gap: '10px', flexShrink: 0, alignItems: 'center' },
   input: { flex: 1, minWidth: 0, padding: '12px 18px', background: 'var(--bg-tertiary)', borderRadius: '24px', border: '1px solid var(--border)', color: 'var(--text)', fontSize: '14px', transition: 'border-color var(--transition)' },
-  sendBtn: { padding: '12px 20px', borderRadius: '24px', background: 'var(--accent)', color: 'var(--accent-text)', fontWeight: 700, cursor: 'pointer', border: 'none', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px', transition: 'transform var(--transition)', boxShadow: 'var(--shadow-accent)', flexShrink: 0 },
+  sendBtn: { padding: '12px 20px', borderRadius: '24px', background: 'var(--accent)', color: 'var(--accent-text)', fontWeight: 700, cursor: 'pointer', border: 'none', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px', transition: 'transform var(--transition), opacity var(--transition)', boxShadow: 'var(--shadow-accent)', flexShrink: 0 },
   topBar: { padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px', borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)', flexShrink: 0 },
   iconBtn: { padding: '8px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', color: 'var(--text-secondary)', background: 'var(--bg-tertiary)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all var(--transition)' },
   micBtn: { width: '42px', height: '42px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all var(--transition)', flexShrink: 0, background: 'var(--bg-tertiary)', color: 'var(--text)', border: '1px solid var(--border)', userSelect: 'none' },
@@ -44,8 +44,11 @@ const s = {
   recWave: { display: 'flex', alignItems: 'center', gap: '2px', height: '20px' },
   recWaveBar: { width: '3px', background: '#ef4444', borderRadius: '2px', transition: 'height 0.05s ease' },
   recHint: { fontSize: '12px', color: 'var(--text-secondary)' },
-  uploadBar: { position: 'fixed', bottom: '90px', left: '50%', transform: 'translateX(-50%)', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '24px', padding: '10px 20px', fontSize: '14px', color: 'var(--text-secondary)', boxShadow: 'var(--shadow-lg)', zIndex: 100 },
-  avatarImg: { width: '46px', height: '46px', borderRadius: '50%', objectFit: 'cover' }
+  uploadBar: { position: 'fixed', bottom: '90px', left: '50%', transform: 'translateX(-50%)', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '24px', padding: '10px 20px', fontSize: '14px', color: 'var(--text-secondary)', boxShadow: 'var(--shadow-lg)', zIndex: 100, animation: 'slideUp 0.3s ease' },
+  avatarImg: { width: '46px', height: '46px', borderRadius: '50%', objectFit: 'cover' },
+  loadingContainer: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px', padding: '40px' },
+  loadingDots: { display: 'flex', gap: '6px', alignItems: 'center' },
+  loadingDot: { width: '10px', height: '10px', borderRadius: '50%', background: 'var(--accent)', animation: 'loadingDots 1.4s ease-in-out infinite' }
 }
 
 export default function MobileChat() {
@@ -167,12 +170,20 @@ export default function MobileChat() {
           </div>
           <div style={s.chatList}>
             {loading ? (
-              <div style={s.emptySidebar}>Загрузка...</div>
+              <div style={s.emptySidebar}>
+                <div style={s.loadingContainer}>
+                  <div style={s.loadingDots}>
+                    <div style={s.loadingDot} />
+                    <div style={s.loadingDot} />
+                    <div style={s.loadingDot} />
+                  </div>
+                </div>
+              </div>
             ) : chats.length === 0 ? (
               <div style={s.emptySidebar}>Нет чатов. Найди пользователя через поиск</div>
             ) : (
-              chats.map((chat) => (
-                <div key={chat.chatId} style={{ ...s.chatItem, ...(activeChat === chat.chatId ? s.chatItemActive : {}) }} onClick={() => openChat(chat.chatId, chat.partner)}>
+              chats.map((chat, i) => (
+                <div key={chat.chatId} style={{ ...s.chatItem, animationDelay: `${i * 0.05}s`, ...(activeChat === chat.chatId ? s.chatItemActive : {}) }} onClick={() => openChat(chat.chatId, chat.partner)}>
                   {renderAvatar(chat.partner)}
                   <div style={s.chatInfo}>
                     <div style={s.chatName}>{chat.partner?.nickname || 'Неизвестно'}</div>
@@ -197,21 +208,23 @@ export default function MobileChat() {
               {renderAvatar(activeChatUser)}
               <div>
                 <div style={s.chatTitle}>
-                  {activeChatUser?.nickname || 'Чат'}
+                  <span style={{ cursor: 'pointer' }} onClick={() => navigate(`/messenger/phone/chat/user/${activeChatUser?.username}`)}>
+                    {activeChatUser?.nickname || 'Чат'}
+                  </span>
                   {renderBadge(activeChatUser)}
                 </div>
                 <div style={s.chatUsername}>@{activeChatUser?.username || ''}</div>
               </div>
             </div>
         <div style={s.messagesContainer}>
-          {messages.map((msg) => {
+          {messages.map((msg, i) => {
             const isSelf = msg.sender_username === user?.username
             const isImage = msg.content?.match(/\.(jpg|jpeg|png|gif|webp)$/i)
             const isAudio = msg.content?.startsWith('http') && !isImage
             if (isImage) {
               return (
                 <div key={msg.id} style={{ ...s.msgRow, ...(isSelf ? s.msgSelf : s.msgOther) }}>
-                  <img src={msg.content} alt="photo" style={{ maxWidth: '220px', borderRadius: '18px', cursor: 'pointer', boxShadow: 'var(--shadow-accent)' }} onClick={() => window.open(msg.content, '_blank')} />
+                  <img src={msg.content} alt="photo" style={{ maxWidth: '220px', borderRadius: '18px', cursor: 'pointer', boxShadow: 'var(--shadow-accent)', animation: 'msgIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) backwards', animationDelay: `${i * 0.03}s` }} onClick={() => window.open(msg.content, '_blank')} />
                 </div>
               )
             }
@@ -223,15 +236,16 @@ export default function MobileChat() {
               )
             }
             return (
-              <div key={msg.id} style={{ ...s.msgRow, ...(isSelf ? s.msgSelf : s.msgOther) }}>
-                <div 
-                  style={{ 
-                    ...s.msgBubble, 
-                    ...(isSelf ? s.msgSelfBubble : s.msgOtherBubble),
-                    ...(isSelf && proSettings.message_color ? { background: proSettings.message_color } : {}),
-                    ...(proSettings.message_font ? { fontFamily: proSettings.message_font } : {})
-                  }}
-                >
+                <div key={msg.id} style={{ ...s.msgRow, ...(isSelf ? s.msgSelf : s.msgOther) }}>
+<div 
+                    style={{ 
+                      ...s.msgBubble, 
+                      ...(isSelf ? s.msgSelfBubble : s.msgOtherBubble),
+                      ...(msg.message_color ? { background: msg.message_color } : {}),
+                      ...(msg.message_font ? { fontFamily: msg.message_font } : {}),
+                      animationDelay: `${i * 0.03}s`
+                    }}
+                  >
                   {msg.content}
                 </div>
               </div>
@@ -260,7 +274,7 @@ export default function MobileChat() {
                 <MicIcon size={20} />
               </button>
               <input style={s.input} placeholder="Сообщение..." value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSend()} />
-              <button style={s.sendBtn} onClick={handleSend} aria-label="Отправить"><SendIcon size={16} /></button>
+              <button style={{ ...s.sendBtn, transform: sendingImage ? 'scale(0.95)' : 'scale(1)' }} onClick={handleSend} aria-label="Отправить"><SendIcon size={16} /></button>
             </div>
           </div>
 

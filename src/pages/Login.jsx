@@ -24,8 +24,7 @@ export default function Login() {
       setLoading(false)
       return
     }
-    const device = localStorage.getItem('wintozo_device') || 'phone'
-    navigate(`/messenger/${device}/chat`, { replace: true })
+    navigate('/messenger/login/device', { replace: true })
   }
 
   return (

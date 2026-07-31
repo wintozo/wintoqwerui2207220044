@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase.js'
 import { BackIcon, CrownIcon, SparkleIcon, CheckIcon, GiftIcon, ShieldIcon, StarIcon, ZapIcon, DiamondIcon } from '../components/Icons.jsx'
 
 const s = {
-  container: { display: 'flex', flexDirection: 'column', height: '100dvh', background: 'var(--bg)', color: 'var(--text)', animation: 'fadeIn 0.3s ease' },
+  container: { display: 'flex', flexDirection: 'column', height: '100dvh', background: 'var(--bg)', color: 'var(--text)', animation: 'fadeIn 0.5s ease' },
   header: { padding: '14px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '12px', background: 'var(--bg-secondary)', flexShrink: 0 },
   title: { fontWeight: 800, fontSize: '17px', flex: 1 },
   body: { flex: 1, overflowY: 'auto', padding: '20px 16px' },
@@ -16,7 +16,7 @@ const s = {
   statusDesc: { fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '16px' },
   endDate: { fontSize: '13px', fontWeight: 600, color: '#92400e', padding: '8px 16px', background: 'rgba(245,158,11,0.15)', borderRadius: '12px', display: 'inline-block' },
   features: { display: 'flex', flexDirection: 'column', gap: '12px' },
-  feature: { display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', background: 'var(--bg-secondary)', borderRadius: '14px', border: '1px solid var(--border)' },
+  feature: { display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', background: 'var(--bg-secondary)', borderRadius: '14px', border: '1px solid var(--border)', animation: 'slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) backwards', transition: 'transform 0.2s ease' },
   featureIcon: { width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   featureTitle: { fontWeight: 700, fontSize: '14px' },
   featureDesc: { fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' },
@@ -131,7 +131,7 @@ export default function ProStatusPage() {
         <h2 style={{ fontSize: '16px', fontWeight: 800, marginBottom: '12px' }}>Что даёт Pro:</h2>
         <div style={s.features}>
           {features.map((f, i) => (
-            <div key={i} style={s.feature}>
+            <div key={i} style={{ ...s.feature, animationDelay: `${i * 0.08}s` }}>
               <div style={{ ...s.featureIcon, color: f.color, background: f.bg }}>
                 {f.icon}
               </div>

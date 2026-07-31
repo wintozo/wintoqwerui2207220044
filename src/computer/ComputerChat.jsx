@@ -213,7 +213,11 @@ export default function ComputerChat() {
             <div style={s.chatHeader}>
               {renderAvatar(activeChatUser)}
               <div>
-                <div style={s.chatTitle}>{activeChatUser?.nickname || 'Чат'}</div>
+                <div style={s.chatTitle}>
+                  <span style={{ cursor: 'pointer' }} onClick={() => navigate(`/messenger/computer/chat/user/${activeChatUser?.username}`)}>
+                    {activeChatUser?.nickname || 'Чат'}
+                  </span>
+                </div>
                 <div style={s.chatUsername}>@{activeChatUser?.username || ''}</div>
               </div>
               <div style={s.iconBtn} onClick={closeChat}><CloseIcon size={18} /></div>
@@ -237,14 +241,14 @@ export default function ComputerChat() {
                     </div>
                   )
                 }
-                return (
+return (
                   <div key={msg.id} style={{ ...s.msgRow, ...(isSelf ? s.msgSelf : s.msgOther) }}>
                     <div 
                       style={{ 
                         ...s.msgBubble, 
                         ...(isSelf ? s.msgSelfBubble : s.msgOtherBubble),
-                        ...(isSelf && proSettings.message_color ? { background: proSettings.message_color } : {}),
-                        ...(proSettings.message_font ? { fontFamily: proSettings.message_font } : {})
+                        ...(msg.message_color ? { background: msg.message_color } : {}),
+                        ...(msg.message_font ? { fontFamily: msg.message_font } : {})
                       }}
                     >
                       {msg.content}

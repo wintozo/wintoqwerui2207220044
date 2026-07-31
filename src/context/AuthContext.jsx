@@ -22,7 +22,7 @@ export function AuthProvider({ children }) {
     if (initialized.current) return
     initialized.current = true
 
-    const saved = localStorage.getItem('wintozo_username')
+const saved = localStorage.getItem('wintozo_username')
     if (saved) {
       const timeout = setTimeout(() => {
         setLoading(false)
@@ -39,6 +39,7 @@ export function AuthProvider({ children }) {
             setLoading(false)
             return
           }
+          // Загружаем также avatar/avatar_url/current_badge
           setUser(data)
           setLoading(false)
         })

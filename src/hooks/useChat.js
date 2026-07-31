@@ -2,6 +2,45 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { useAuth } from '../context/AuthContext.jsx'
 
+/**
+ * Конвертирует изображение в WebP (самый лёгкий формат).
+ * Если браузер не поддерживает — возвращает оригинал.
+ */
+function convertToWebP(file, quality = 0.8) {
+  return new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        canvas.width = img.width
+        canvas.height = img.height
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0)
+        
+        // Пробуем WebP, fallback на JPEG
+        canvas.toBlob(
+          (blob) => {
+            if (blob && blob.type === 'image/webp') {
+              resolve(blob)
+            } else {
+              canvas.toBlob(
+                (jpegBlob) => resolve(jpegBlob || file),
+                'image/jpeg',
+                quality
+              )
+            }
+          },
+          'image/webp',
+          quality
+        )
+      }
+      img.src = e.target.result
+    }
+    reader.readAsDataURL(file)
+  })
+}
+
 export function useChat() {
   const { user } = useAuth()
   const [chats, setChats] = useState([])
@@ -39,9 +78,9 @@ export function useChat() {
 
       let userMap = {}
       if (userNames.length > 0) {
-        const { data: users } = await supabase
+const { data: users } = await supabase
           .from('wintozo_users')
-          .select('username, nickname')
+          .select('username, nickname, avatar, avatar_url, current_badge')
           .in('username', userNames)
         users?.forEach((u) => { userMap[u.username] = u })
       }
@@ -148,15 +187,31 @@ export function useChat() {
     activeChatRef.current = null
   }, [])
 
-  const sendMessage = useCallback(async (content) => {
+const sendMessage = useCallback(async (content) => {
     if (!activeChatRef.current || !content.trim() || !user) return
     try {
+      // Получаем Pro-настройки отправителя
+      let msgColor = '', msgFont = ''
+      try {
+        const { data: proData } = await supabase
+          .from('wintozo_users')
+          .select('message_color, message_font')
+          .eq('username', user.username)
+          .single()
+        if (proData) {
+          if (proData.message_color) msgColor = proData.message_color
+          if (proData.message_font) msgFont = proData.message_font
+        }
+      } catch {}
+
       const { data } = await supabase
         .from('messages')
         .insert({
           chat_id: activeChatRef.current,
           sender_username: user.username,
-          content: content.trim()
+          content: content.trim(),
+          message_color: msgColor,
+          message_font: msgFont
         })
         .select()
         .single()
@@ -181,15 +236,30 @@ export function useChat() {
     }
   }, [user, loadChats])
 
-  const sendMediaMessage = useCallback(async (mediaData) => {
+const sendMediaMessage = useCallback(async (mediaData) => {
     if (!activeChatRef.current || !mediaData || !user) return null
     try {
+      let msgColor = '', msgFont = ''
+      try {
+        const { data: proData } = await supabase
+          .from('wintozo_users')
+          .select('message_color, message_font')
+          .eq('username', user.username)
+          .single()
+        if (proData) {
+          if (proData.message_color) msgColor = proData.message_color
+          if (proData.message_font) msgFont = proData.message_font
+        }
+      } catch {}
+
       const { data } = await supabase
         .from('messages')
         .insert({
           chat_id: activeChatRef.current,
           sender_username: user.username,
-          content: mediaData.url
+          content: mediaData.url,
+          message_color: msgColor,
+          message_font: msgFont
         })
         .select()
         .single()
@@ -213,11 +283,13 @@ export function useChat() {
   const sendImageMessage = useCallback(async (file) => {
     if (!activeChatRef.current || !file || !user) return null
     try {
-      const fileName = `photo_${user.username}_${Date.now()}.jpg`
+      // Конвертируем фото в WebP (самый лёгкий формат)
+      const webpBlob = await convertToWebP(file)
+      const fileName = `photo_${user.username}_${Date.now()}.webp`
 
       const { error: uploadError } = await supabase.storage
         .from('message-media')
-        .upload(fileName, file, { contentType: file.type || 'image/jpeg' })
+        .upload(fileName, webpBlob, { contentType: 'image/webp' })
 
       if (uploadError) {
         alert('Ошибка загрузки: ' + uploadError.message)

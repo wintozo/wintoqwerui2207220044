@@ -6,17 +6,17 @@ import { BackIcon, LogoutIcon, ImageIcon, TrophyIcon, CrownIcon, SparkleIcon } f
 import AvatarPicker from '../components/AvatarPicker.jsx'
 
 const s = {
-  container: { display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg)', color: 'var(--text)', animation: 'fadeIn 0.3s ease' },
+  container: { display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg)', color: 'var(--text)', animation: 'fadeIn 0.5s ease' },
   header: { display: 'flex', alignItems: 'center', padding: '14px 16px', borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)', gap: '10px', flexShrink: 0 },
   back: { padding: '8px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', color: 'var(--text)', background: 'var(--bg-tertiary)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all var(--transition)' },
   title: { fontWeight: 700, fontSize: '17px' },
   body: { flex: 1, padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '24px', overflowY: 'auto' },
-  section: { display: 'flex', flexDirection: 'column', gap: '8px', animation: 'slideUp 0.4s ease backwards' },
+  section: { display: 'flex', flexDirection: 'column', gap: '8px', animation: 'slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) backwards', transition: 'transform 0.2s ease' },
   sectionTitle: { fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 },
   profileInfo: { background: 'var(--bg-secondary)', padding: '18px', borderRadius: 'var(--radius)', border: '1px solid var(--border)' },
   profileLabel: { fontSize: '12px', color: 'var(--text-secondary)' },
   profileValue: { fontSize: '16px', fontWeight: 600, marginTop: '4px' },
-  themeOption: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius)', border: '1.5px solid var(--border)', cursor: 'pointer', transition: 'border-color var(--transition)' },
+  themeOption: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius)', border: '1.5px solid var(--border)', cursor: 'pointer', transition: 'all var(--transition)', animation: 'slideUp 0.4s ease backwards' },
   themeName: { fontWeight: 600, fontSize: '15px' },
   themeDot: { width: '20px', height: '20px', borderRadius: '50%', border: '2px solid var(--border)', transition: 'all var(--transition)' },
   themeActive: { borderColor: 'var(--accent)', boxShadow: '0 0 0 3px var(--accent-glow)' },
@@ -60,9 +60,17 @@ export default function MobileSettings() {
     navigate('/messenger/registration/username')
   }
 
-  function handleAvatarChange(avatar) {
+function handleAvatarChange(avatar) {
     if (user) {
-      setUser({ ...user, ...avatar })
+      if (avatar === null) {
+        setUser({ ...user, avatar: '', avatar_url: '' })
+      } else if (avatar.type === 'emoji') {
+        setUser({ ...user, avatar: avatar.value, avatar_url: '' })
+      } else if (avatar.type === 'url') {
+        setUser({ ...user, avatar: '', avatar_url: avatar.value })
+      } else if (avatar.type === 'color') {
+        setUser({ ...user, avatar: '', avatar_url: avatar.value })
+      }
     }
   }
 
@@ -130,8 +138,8 @@ export default function MobileSettings() {
         </div>
         <div style={{ ...s.section, animationDelay: '0.05s' }}>
           <div style={s.sectionTitle}>ТЕМА</div>
-          {themes.map((t) => (
-            <div key={t.id} style={s.themeOption} onClick={() => setTheme(t.id)}>
+          {themes.map((t, i) => (
+            <div key={t.id} style={{ ...s.themeOption, animationDelay: `${i * 0.05}s` }} onClick={() => setTheme(t.id)}>
               <div style={s.themeName}>{t.name}</div>
               <div style={{ ...s.themeDot, background: t.color, ...(theme === t.id ? s.themeActive : {}) }} />
             </div>
@@ -167,6 +175,13 @@ export default function MobileSettings() {
               <div style={{ fontSize: '18px' }}>›</div>
             </div>
           )}
+        </div>
+        <div style={{ ...s.section, animationDelay: '0.18s' }}>
+          <div style={s.sectionTitle}>СИСТЕМА</div>
+          <div style={{ ...s.themeOption, cursor: 'pointer' }} onClick={() => navigate('/messenger/registration/device/select')}>
+            <div style={s.themeName}>Сменить устройство</div>
+            <div style={{ fontSize: '18px' }}>›</div>
+          </div>
         </div>
         <div style={{ ...s.logout, animation: 'slideUp 0.4s ease 0.1s backwards' }} onClick={handleLogout}><LogoutIcon size={18} /> Выйти</div>
       </div>

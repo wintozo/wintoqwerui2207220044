@@ -4,14 +4,14 @@ import { supabase } from '../lib/supabase.js'
 import { BackIcon, CrownIcon, SparkleIcon, CheckIcon, SendIcon } from '../components/Icons.jsx'
 
 const s = {
-  container: { display: 'flex', flexDirection: 'column', height: '100dvh', background: 'var(--bg)', color: 'var(--text)', animation: 'fadeIn 0.3s ease' },
+  container: { display: 'flex', flexDirection: 'column', height: '100dvh', background: 'var(--bg)', color: 'var(--text)', animation: 'fadeIn 0.5s ease' },
   header: { padding: '14px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '12px', background: 'var(--bg-secondary)', flexShrink: 0 },
   title: { fontWeight: 800, fontSize: '17px', flex: 1 },
   body: { flex: 1, overflowY: 'auto', padding: '20px 16px' },
   section: { marginBottom: '24px' },
   sectionTitle: { fontSize: '14px', fontWeight: 800, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' },
   card: { background: 'var(--bg-secondary)', borderRadius: '16px', border: '1px solid var(--border)', padding: '16px', marginBottom: '12px' },
-  option: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', borderRadius: '12px', borderStyle: 'solid', borderWidth: '2px', borderColor: 'var(--border)', cursor: 'pointer', marginBottom: '8px', transition: 'all 0.2s' },
+  option: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', borderRadius: '12px', borderStyle: 'solid', borderWidth: '2px', borderColor: 'var(--border)', cursor: 'pointer', marginBottom: '8px', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', animation: 'slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) backwards' },
   optionSelected: { borderColor: '#f59e0b', background: 'rgba(245,158,11,0.1)' },
   colorBtn: { width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' },
   colorBtnSelected: { outline: '3px solid #f59e0b', outlineOffset: '2px', transform: 'scale(1.1)' },

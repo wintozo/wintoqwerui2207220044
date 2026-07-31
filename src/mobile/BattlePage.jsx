@@ -6,7 +6,7 @@ import { BackIcon, TrophyIcon, UsersIcon, ZapIcon, CrownIcon } from '../componen
 const ALL_EMOJIS = ['😊', '😂', '❤️', '🔥', '👍', '🎉', '😎', '💎', '👑', '⚡', '🌟', '😍', '🤔', '😰', '🙏', '💪', '✅', '❌', '🚀', '💜', '🐶', '🐱', '🦊', '🐸', '🐹', '🐯', '🦄', '🐲', '🎮', '🎸', '🍕', '🍔', '🌮', '🍩', '🍪', '☕', '🌈', '⚽', '🏆', '💡']
 
 const s = {
-  container: { display: 'flex', flexDirection: 'column', height: '100dvh', background: 'var(--bg)', color: 'var(--text)', animation: 'fadeIn 0.3s ease' },
+  container: { display: 'flex', flexDirection: 'column', height: '100dvh', background: 'var(--bg)', color: 'var(--text)', animation: 'fadeIn 0.5s ease' },
   header: { padding: '14px 16px', borderBottom: '1px solid var(--border)', background: 'linear-gradient(135deg, #f97316, #ec4899)', color: 'white', flexShrink: 0 },
   headerTop: { display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' },
   title: { fontWeight: 800, fontSize: '17px', flex: 1 },
@@ -15,7 +15,7 @@ const s = {
   tab: { padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', border: 'none', background: 'transparent', color: 'rgba(255,255,255,0.6)' },
   tabActive: { background: 'rgba(255,255,255,0.25)', color: 'white' },
   body: { flex: 1, overflowY: 'auto', padding: '16px' },
-  card: { background: 'var(--bg-secondary)', borderRadius: '16px', padding: '16px', marginBottom: '12px', border: '1px solid var(--border)' },
+  card: { background: 'var(--bg-secondary)', borderRadius: '16px', padding: '16px', marginBottom: '12px', border: '1px solid var(--border)', animation: 'slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) backwards', transition: 'transform 0.2s ease' },
   cardActive: { background: 'linear-gradient(135deg, #ffedd5, #fef3c7)', borderColor: '#f59e0b' },
   cardActiveDark: { background: 'linear-gradient(135deg, rgba(249,115,22,0.15), rgba(234,179,8,0.15))', borderColor: '#f59e0b' },
   emoji: { fontSize: '32px' },
@@ -24,13 +24,13 @@ const s = {
   subPoints: { fontSize: '11px', color: 'var(--text-secondary)' },
   joinBtn: { width: '100%', padding: '10px', borderRadius: '12px', background: 'linear-gradient(135deg, #f97316, #ec4899)', color: 'white', fontWeight: 700, fontSize: '13px', cursor: 'pointer', border: 'none' },
   emojiGrid: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginTop: '16px' },
-  emojiBtn: { aspectRatio: '1', borderRadius: '16px', background: 'var(--bg-secondary)', border: '2px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', cursor: 'pointer' },
+  emojiBtn: { aspectRatio: '1', borderRadius: '16px', background: 'var(--bg-secondary)', border: '2px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', cursor: 'pointer', transition: 'transform 0.2s ease, border-color 0.2s ease' },
   teamInfo: { textAlign: 'center', marginBottom: '20px' },
   teamEmoji: { fontSize: '64px' },
   teamName: { fontSize: '18px', fontWeight: 800, marginTop: '8px' },
   proBadge: { display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '8px', padding: '4px 12px', background: '#fef3c7', borderRadius: '20px', fontSize: '12px', fontWeight: 700, color: '#92400e' },
   proBadgeDark: { background: 'rgba(234,179,8,0.15)', color: '#fbbf24' },
-  historyItem: { display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: 'var(--bg-secondary)', borderRadius: '12px', marginBottom: '8px', border: '1px solid var(--border)' },
+  historyItem: { display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: 'var(--bg-secondary)', borderRadius: '12px', marginBottom: '8px', border: '1px solid var(--border)', animation: 'slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) backwards', transition: 'transform 0.2s ease' },
   loading: { display: 'flex', justifyContent: 'center', padding: '40px' },
   empty: { textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' },
   leaveBtn: { width: '100%', padding: '12px', borderRadius: '12px', background: 'transparent', border: '2px solid #ef4444', color: '#ef4444', fontWeight: 700, fontSize: '13px', cursor: 'pointer', marginTop: '16px' }
