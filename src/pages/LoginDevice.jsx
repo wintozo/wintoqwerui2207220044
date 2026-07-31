@@ -28,6 +28,7 @@ export default function LoginDevice() {
             <div className="device-desc">Полноценная версия</div>
           </div>
         </div>
+        <Link to="/messenger/user/news/registration/privacy-policy/" className="auth-privacy-link">Политика конфиденциальности</Link>
       </div>
     </div>
   )

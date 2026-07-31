@@ -15,6 +15,7 @@ import ProCustomizePage from './mobile/ProCustomizePage.jsx'
 import UserProfilePage from './pages/UserProfilePage.jsx'
 import MobileChat from './mobile/MobileChat.jsx'
 import ComputerChat from './computer/ComputerChat.jsx'
+import PolitikaKonfeditialnostiPage from './pages/PolitikaKonfeditialnostiPage.jsx'
 
 export default function App() {
   const { loading } = useAuth()
@@ -46,6 +47,7 @@ export default function App() {
       <Route path="/messenger/battle" element={<BattlePage />} />
       <Route path="/messenger/status/pro" element={<ProStatusPage />} />
       <Route path="/messenger/settings/pro-customize" element={<ProCustomizePage />} />
+      <Route path="/messenger/user/news/registration/privacy-policy/" element={<PolitikaKonfeditialnostiPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

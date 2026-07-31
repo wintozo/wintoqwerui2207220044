@@ -51,6 +51,7 @@ export default function RegistrationPassword() {
         {error && <div className="error-text">{error}</div>}
         <button className="btn-primary" onClick={handleNext}>Далее <ArrowRightIcon size={18} /></button>
         <button className="btn-secondary" onClick={() => navigate('/messenger/registration/username')}>Назад</button>
+        <Link to="/messenger/user/news/registration/privacy-policy/" className="auth-privacy-link">Политика конфиденциальности</Link>
       </div>
     </div>
   )

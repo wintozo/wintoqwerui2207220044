@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase.js'
 import { useAuth } from '../context/AuthContext.jsx'
-import { BackIcon, LogoutIcon, ImageIcon, TrophyIcon, CrownIcon, SparkleIcon } from '../components/Icons.jsx'
+import { BackIcon, LogoutIcon, ImageIcon, TrophyIcon, CrownIcon, SparkleIcon, ShieldIcon } from '../components/Icons.jsx'
 import AvatarPicker from '../components/AvatarPicker.jsx'
 
 const s = {
@@ -194,6 +194,12 @@ function handleAvatarChange(avatar) {
           <div style={{ padding: '16px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius)', border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} onClick={() => navigate('/messenger/registration/device/select')}>
           <div style={{ fontWeight: 600, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               Сменить устройство
+            </div>
+            <div style={{ fontSize: '18px', color: 'var(--text-secondary)' }}>›</div>
+          </div>
+          <div style={{ padding: '16px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius)', border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} onClick={() => navigate('/messenger/user/news/registration/privacy-policy/')}>
+            <div style={{ fontWeight: 600, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <ShieldIcon size={20} /> Политика конфиденциальности
             </div>
             <div style={{ fontSize: '18px', color: 'var(--text-secondary)' }}>›</div>
           </div>

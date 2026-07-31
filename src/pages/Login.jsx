@@ -49,6 +49,7 @@ export default function Login() {
         {error && <div className="error-text">{error}</div>}
         <button className="btn-primary" onClick={handleLogin} disabled={loading}>Войти <ArrowRightIcon size={18} /></button>
         <Link to="/messenger/registration/username" className="auth-link">Нет аккаунта? Создать</Link>
+        <Link to="/messenger/user/news/registration/privacy-policy/" className="auth-privacy-link">Политика конфиденциальности</Link>
       </div>
     </div>
   )

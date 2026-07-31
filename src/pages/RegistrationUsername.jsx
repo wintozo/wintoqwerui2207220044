@@ -62,6 +62,7 @@ export default function RegistrationUsername() {
         {error && <div className="error-text">{error}</div>}
         <button className="btn-primary" onClick={handleNext}>Далее <ArrowRightIcon size={18} /></button>
         <Link to="/messenger/login" className="auth-link">Уже есть аккаунт? Войти</Link>
+        <Link to="/messenger/user/news/registration/privacy-policy/" className="auth-privacy-link">Политика конфиденциальности</Link>
       </div>
     </div>
   )

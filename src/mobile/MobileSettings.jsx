@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase.js'
 import { useAuth } from '../context/AuthContext.jsx'
-import { BackIcon, LogoutIcon, ImageIcon, TrophyIcon, CrownIcon, SparkleIcon } from '../components/Icons.jsx'
+import { BackIcon, LogoutIcon, ImageIcon, TrophyIcon, CrownIcon, SparkleIcon, ShieldIcon } from '../components/Icons.jsx'
 import AvatarPicker from '../components/AvatarPicker.jsx'
 
 const s = {
